@@ -4,7 +4,7 @@ import os
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
 
 # Google Sheets
-GSHEET_CREDS_JSON = os.getenv("GSHEET_CREDS_JSON", "creds.json")
+GSHEET_CREDS_JSON = os.getenv("GOOGLE_SHEETS_CREDENTIALS_PATH", "creds.json")
 
 #Openrouter
 OPENROUTER_MODEL_NAME = os.getenv("OPENROUTER_MODEL_NAME", "YOUR_OPENROUTER_MODEL_NAME")
