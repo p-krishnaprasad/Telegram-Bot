@@ -27,7 +27,6 @@ Thumbs.db
 
 # Environment variables
 .env
-config.py
 
 # Google service account key
 service-account.json
