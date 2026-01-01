@@ -1,10 +1,12 @@
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 # Telegram
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
 
 # Google Sheets
-GSHEET_CREDS_JSON = os.getenv("GOOGLE_SHEETS_CREDENTIALS_PATH", "creds.json")
+GOOGLE_SERVICE_ACCOUNT = os.getenv("GOOGLE_SERVICE_ACCOUNT", "")
 
 #Openrouter
 OPENROUTER_MODEL_NAME = os.getenv("OPENROUTER_MODEL_NAME", "YOUR_OPENROUTER_MODEL_NAME")

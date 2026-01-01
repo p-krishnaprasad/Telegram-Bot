@@ -1,10 +1,11 @@
+import json
 import gspread
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime
 from dateutil import parser
 from app.utils import time_it
-from config import GSHEET_CREDS_JSON
+from config import GOOGLE_SERVICE_ACCOUNT
 # -----------------------------
 # CONFIG
 # -----------------------------
@@ -21,11 +22,13 @@ MONTH_SHEETS = [
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ]
 
+GOOGLE_SERVICE_ACCOUNT_JSON = json.loads(GOOGLE_SERVICE_ACCOUNT)
+
 # -----------------------------
 # AUTH
 # -----------------------------
-credentials = Credentials.from_service_account_file(
-    GSHEET_CREDS_JSON, scopes=SCOPES
+credentials = Credentials.from_service_account_info(
+    GOOGLE_SERVICE_ACCOUNT_JSON, scopes=SCOPES
 )
 
 gc = gspread.authorize(credentials)
