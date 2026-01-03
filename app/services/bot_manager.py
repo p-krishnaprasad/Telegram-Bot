@@ -43,6 +43,7 @@ def process_update(data):
         # 4. AI Parser Service: Structure the data
         parsed_result = ai_ocr_parser(ocr_text)
         cleaned_result = json.loads(parsed_result.strip().replace("```json", "").replace("```", ""))
+        #print(f"AI Parsed Result: {cleaned_result}")
 
         # 5. Upload to Google Sheets
         append_expenses(cleaned_result)

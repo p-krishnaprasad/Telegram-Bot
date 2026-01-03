@@ -19,7 +19,7 @@ def download_telegram_file(file_id: str) -> bytes:
         file_info_resp = requests.get(
             f"{TELEGRAM_API}/getFile", 
             params={"file_id": file_id}, 
-            timeout=10
+            timeout=60
         )
         file_info_resp.raise_for_status()
         file_path = file_info_resp.json().get("result", {}).get("file_path")
