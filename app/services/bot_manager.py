@@ -2,54 +2,78 @@ import json
 from app.services.telegram_service import download_telegram_file, send_reply
 from app.services.ocr_processor import extract_text_from_image
 from app.services.ai_parser import ai_ocr_parser
+from app.services.text_parser import parse_text_expense
 from app.services.sheets_manager import append_expenses
 from app.utils import time_it
 
-# Keep deduplication at the manager level
 PROCESSED_UPDATES = set()
 
 @time_it
 def process_update(data):
     """
-    The Orchestrator: Connects Telegram -> OCR -> AI Parser
+    Orchestrator:
+    - Photo → OCR → AI → Sheets
+    - Text  → Direct Parse → Sheets
     """
     try:
-        # 1. Telegram Service: Validation & Deduplication
         update_id = data.get("update_id")
         if not update_id or update_id in PROCESSED_UPDATES:
             return
         PROCESSED_UPDATES.add(update_id)
-
-        if "message" not in data or "photo" not in data["message"]:
+        print(f"Processing update_id: {update_id}")
+        message = data.get("message")
+        if not message:
             return
 
-        chat_id = data["message"]["chat"]["id"]
-        file_id = data["message"]["photo"][-1]["file_id"]
+        chat_id = message["chat"]["id"]
 
-        # 2. Telegram Service: Download
-        # We move the complexity of requests/getFile into its own service
-        img_bytes = download_telegram_file(file_id)
-        if not img_bytes:
-            send_reply(chat_id, "Sorry, I couldn't download the image.")
+        # ---------------------------------
+        # 📝 TEXT MESSAGE FLOW
+        # ---------------------------------
+        if "text" in message:
+            try:
+                parsed_result = parse_text_expense(message["text"])
+                append_expenses(parsed_result)
+                send_reply(chat_id, parsed_result)
+            except Exception as e:
+                send_reply(
+                    chat_id,
+                    "❌ Invalid format.\n"
+                    'Expected:\n"date","item","price","AUD","Category","Seller","Seller Address"'
+                )
             return
 
-        # 3. OCR Service: Extract Text
-        ocr_text = extract_text_from_image(img_bytes)
-        if not ocr_text:
-            send_reply(chat_id, "I couldn't find any text in that photo.")
+        # ---------------------------------
+        # 📷 PHOTO MESSAGE FLOW
+        # ---------------------------------
+        if "photo" in message:
+            file_id = message["photo"][-1]["file_id"]
+
+            img_bytes = download_telegram_file(file_id)
+            if not img_bytes:
+                send_reply(chat_id, "❌ Failed to download image.")
+                return
+
+            ocr_text = extract_text_from_image(img_bytes)
+            if not ocr_text:
+                send_reply(chat_id, "❌ No text detected in image.")
+                return
+
+            parsed_result = ai_ocr_parser(ocr_text)
+            cleaned_result = json.loads(
+                parsed_result.strip()
+                .replace("```json", "")
+                .replace("```", "")
+            )
+
+            append_expenses(cleaned_result)
+            send_reply(chat_id, cleaned_result)
             return
-        # print(f"OCR Extracted Text: {ocr_text}")
 
-        # 4. AI Parser Service: Structure the data
-        parsed_result = ai_ocr_parser(ocr_text)
-        cleaned_result = json.loads(parsed_result.strip().replace("```json", "").replace("```", ""))
-        #print(f"AI Parsed Result: {cleaned_result}")
-
-        # 5. Upload to Google Sheets
-        append_expenses(cleaned_result)
-
-        # 6. Final Output
-        send_reply(chat_id, cleaned_result)
+        # ---------------------------------
+        # Unsupported message
+        # ---------------------------------
+        send_reply(chat_id, "⚠️ Please send a photo or formatted text.")
 
     except Exception as e:
         print(f"Orchestration Error: {e}")
