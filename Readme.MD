@@ -40,31 +40,6 @@ The application is deployed on **Render**, uses **OpenRouter** for AI parsing, a
 
 ---
 
-## 📁 Project Structure
-
-app/
-├── services/
-│ ├── telegram_service.py
-│ ├── ocr_processor.py
-│ ├── ai_parser.py
-│ ├── sheets_manager.py
-│ └── text_parser.py
-├── utils/
-│ └── time_it.py
-├── routes/
-│ └── telegram_webhook.py
-├── config.py
-└── init.py
-wsgi.py
-requirements.txt
-Dockerfile
-README.md
-
-yaml
-Copy code
-
----
-
 ## 🔑 Prerequisites
 
 ### 1️⃣ Telegram Bot
@@ -118,7 +93,10 @@ GOOGLE_REFRESH_TOKEN=your_google_refresh_token
 ⚠️ Do NOT commit secrets to GitHub.
 All secrets should live in Render Environment Variables.
 
-🧪 Local Development (Optional)
+---
+
+🧪 Local Development
+
 1️⃣ Clone repository
 bash
 Copy code
@@ -171,29 +149,8 @@ Verify webhook:
 bash
 Copy code
 curl https://api.telegram.org/bot<BOT_TOKEN>/getWebhookInfo
-📊 Google Sheets Behavior
-Expenses are appended to a Google Sheet
 
-The sheet is created (if missing) inside the configured Drive folder
-
-Typical columns:
-
-Date	Description	Amount	Category	Source
-
-🧠 AI Parsing Strategy
-OCR text is passed to an LLM via OpenRouter
-
-The model extracts:
-
-Merchant
-
-Total amount
-
-Date
-
-Category
-
-Falls back to rule-based parsing if AI output is invalid
+---
 
 🛡️ Reliability & Safety
 Prevents duplicate Telegram update_id processing
@@ -203,6 +160,8 @@ Acknowledges Telegram quickly to avoid retries
 Isolates OCR, AI, and Sheets logic into services
 
 Timing and performance logging built-in
+
+---
 
 📈 Future Improvements
 Monthly expense summaries
@@ -215,12 +174,15 @@ PDF receipt support
 
 Google Drive receipt archiving
 
+---
+
 🧑‍💻 Author
 Krishna Prasad
 Senior Software Engineer
 AI Automation • Cloud • Backend Systems
 
-📜 License
+---
 
+📜 License
 MIT License
 ```
