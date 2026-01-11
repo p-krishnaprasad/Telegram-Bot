@@ -1,20 +1,19 @@
-import json
 import gspread
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
-from datetime import datetime
 from dateutil import parser
+from app.services.google_auth import (
+    get_gspread_client,
+    get_drive_service
+)
+from app.services.drive_service import (
+    find_spreadsheet
+)
 from app.utils import time_it
-from config import GOOGLE_SERVICE_ACCOUNT
-# -----------------------------
-# CONFIG
-# -----------------------------
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
+from config import GOOGLE_DRIVE_FOLDER_ID
+import time
 
-TEMPLATE_FILE_NAME = "Expenses_Template"
+gc = get_gspread_client()
+drive_service = get_drive_service()
+
 YEARLY_FILE_PREFIX = "Expenses_"
 
 MONTH_SHEETS = [
@@ -22,79 +21,95 @@ MONTH_SHEETS = [
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ]
 
-GOOGLE_SERVICE_ACCOUNT_JSON = json.loads(GOOGLE_SERVICE_ACCOUNT)
-
-# -----------------------------
-# AUTH
-# -----------------------------
-credentials = Credentials.from_service_account_info(
-    GOOGLE_SERVICE_ACCOUNT_JSON, scopes=SCOPES
-)
-
-gc = gspread.authorize(credentials)
-drive_service = build("drive", "v3", credentials=credentials)
+HEADERS = [
+    "date",
+    "item",
+    "price",
+    "currency",
+    "category",
+    "seller",
+    "seller address"
+]
 
 # -----------------------------
 # HELPERS
 # -----------------------------
 def get_year_and_month(purchase_date: str):
     dt = parser.parse(purchase_date)
-    year = dt.year
-    month_sheet = MONTH_SHEETS[dt.month - 1]
-    return year, month_sheet, dt.strftime("%Y-%m-%d")
+    return (
+        dt.year,
+        MONTH_SHEETS[dt.month - 1],
+        dt.strftime("%Y-%m-%d")
+    )
 
+def format_header(worksheet, headers):
+    # Insert header row (1 write)
+    worksheet.insert_row(headers, 1)
 
-def find_drive_file(file_name):
-    query = f"name='{file_name}' and mimeType='application/vnd.google-apps.spreadsheet'"
-    results = drive_service.files().list(q=query).execute()
-    files = results.get("files", [])
-    return files[0] if files else None
+    # Batch all formatting into ONE request
+    worksheet.batch_format([
+        {
+            "range": "A1:G1",
+            "format": {
+                "backgroundColor": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 0
+                },
+                "horizontalAlignment": "CENTER",
+                "textFormat": {
+                    "bold": True,
+                    "foregroundColor": {
+                        "red": 1,
+                        "green": 1,
+                        "blue": 1
+                    },
+                    "fontSize": 11
+                }
+            }
+        }
+    ])
 
-def get_template_parent_folder_id(template_file_id):
-    file = drive_service.files().get(
-        fileId=template_file_id,
-        fields="parents",
-        supportsAllDrives=True
-    ).execute()
+    # Freeze + filter (2 writes, unavoidable)
+    worksheet.freeze(rows=1)
 
-    parents = file.get("parents", [])
-    if not parents:
-        raise Exception("Template file has no parent folder")
+def create_yearly_expense_sheet(sheet_name, parent_folder_id):
+    spreadsheet = gc.create(sheet_name, folder_id=parent_folder_id)
 
-    return parents[0]
+    # Rename default sheet to Jan
+    spreadsheet.sheet1.update_title(MONTH_SHEETS[0])
 
-def copy_template(new_file_name):
-    template = find_drive_file(TEMPLATE_FILE_NAME)
-    if not template:
-        raise Exception("Expenses_Template not found in Drive")
+    # Add remaining months
+    for month in MONTH_SHEETS[1:]:
+        spreadsheet.add_worksheet(
+            title=month,
+            rows=1000,
+            cols=len(HEADERS)
+        )
 
-    parent_folder_id = get_template_parent_folder_id(template["id"])
+    # Headers & formatting
+    for month in MONTH_SHEETS:
+        ws = spreadsheet.worksheet(month)
+        if not ws.row_values(1): #to reserver the spot for headers and avoid overwriting headers with data
+            format_header(ws, HEADERS)
 
-    copied = drive_service.files().copy(
-        fileId=template["id"],
-        body={
-            "name": new_file_name,
-            "parents": [parent_folder_id]
-        },
-        supportsAllDrives=True
-    ).execute()
-
-    return copied["id"]
-
+    return spreadsheet.id
 
 
 def get_or_create_yearly_sheet(year: int):
     file_name = f"{YEARLY_FILE_PREFIX}{year}"
-    file = find_drive_file(file_name)
-    if file:
-        return gc.open(file_name)
+    existing_sheet = find_spreadsheet(drive_service, file_name)
+    if existing_sheet:
+        return gc.open_by_key(existing_sheet["id"])
 
-    # Create from template
-    new_file_id = copy_template(file_name)
-    return gc.open_by_key(new_file_id)
+    # new_file_id = create_yearly_expense_sheet(file_name, parent_folder_id)
+    new_file = create_yearly_expense_sheet(file_name, GOOGLE_DRIVE_FOLDER_ID)
+
+    return gc.open_by_key(new_file)
+
 
 # -----------------------------
-# MAIN FUNCTION
+# MAIN ENTRY POINT
 # -----------------------------
 @time_it
 def append_expenses(data: dict):
@@ -103,15 +118,16 @@ def append_expenses(data: dict):
     )
 
     spreadsheet = get_or_create_yearly_sheet(year)
-
     try:
         worksheet = spreadsheet.worksheet(month_sheet)
     except gspread.WorksheetNotFound:
-        raise Exception(f"Worksheet '{month_sheet}' not found")
+        raise RuntimeError(f"Worksheet '{month_sheet}' not found")
+    
+    if not worksheet.row_values(1):
+        format_header(worksheet, HEADERS)
 
-    rows = []
-    for item in data["items"]:
-        rows.append([
+    rows = [
+        [
             formatted_date,
             item["itemName"],
             item["price"],
@@ -119,6 +135,8 @@ def append_expenses(data: dict):
             item["category"],
             data["seller"]["name"],
             data["seller"]["address"]
-        ])
+        ]
+        for item in data["items"]
+    ]
 
     worksheet.append_rows(rows, value_input_option="USER_ENTERED")
