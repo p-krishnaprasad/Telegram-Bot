@@ -96,91 +96,102 @@ All secrets should live in Render Environment Variables.
 
 ---
 
-🧪 Local Development
+## 🧪 Local Development, Deployment & Setup
 
-1️⃣ Clone repository
-bash
-Copy code
+```bash
+# ==============================
+# LOCAL DEVELOPMENT
+# ==============================
+
+# Clone repository
 git clone https://github.com/yourusername/receipt2sheets.git
 cd receipt2sheets
-2️⃣ Create virtual environment
-bash
-Copy code
+
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate
-3️⃣ Install system dependencies (Linux / WSL)
-bash
-Copy code
+
+# Install system dependencies (Linux / WSL)
 sudo apt update
 sudo apt install -y tesseract-ocr poppler-utils
-4️⃣ Install Python dependencies
-bash
-Copy code
+
+# Install Python dependencies
 pip install -r requirements.txt
-▶️ Run Locally
-bash
-Copy code
+
+# Run locally
 gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
-☁️ Deployment on Render
-1️⃣ Create a new Web Service
-Runtime: Docker
+```
 
-Region: Any
+# ==============================
 
-Branch: main
+# DEPLOYMENT ON RENDER
 
-2️⃣ Build Command
-nginx
-Copy code
+# ==============================
+
+# Build Docker image
+
 docker build -t receipt2sheets .
-3️⃣ Start Command
-nginx
-Copy code
-gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
-🔗 Telegram Webhook Setup
-After Render deployment, set webhook:
 
-bash
-Copy code
+# Start application (Render start command)
+
+gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
+
+# ==============================
+
+# TELEGRAM WEBHOOK SETUP
+
+# ==============================
+
+# Set Telegram webhook
+
 curl -X POST \
 https://api.telegram.org/bot<BOT_TOKEN>/setWebhook \
 -d "url=https://your-render-app.onrender.com/telegram"
-Verify webhook:
 
-bash
-Copy code
+# Verify webhook
+
 curl https://api.telegram.org/bot<BOT_TOKEN>/getWebhookInfo
 
 ---
 
-🛡️ Reliability & Safety
-Prevents duplicate Telegram update_id processing
+# ==============================
 
-Acknowledges Telegram quickly to avoid retries
+# RELIABILITY & SAFETY
 
-Isolates OCR, AI, and Sheets logic into services
+# ==============================
 
-Timing and performance logging built-in
+# - Prevents duplicate Telegram update_id processing
+
+# - Acknowledges Telegram requests quickly to avoid retries
+
+# - Isolates OCR, AI, and Google Sheets logic into services
+
+# - Timing and performance logging built-in
 
 ---
 
-📈 Future Improvements
-Monthly expense summaries
+# ==============================
 
-Charts & dashboards
+# FUTURE IMPROVEMENTS
 
-Multi-currency support
+# ==============================
 
-PDF receipt support
+# - Monthly expense summaries
 
-Google Drive receipt archiving
+# - Charts & dashboards
+
+# - Multi-currency support
+
+# - PDF receipt support
+
+# - Google Drive receipt archiving
 
 ---
 
 ## 🧑‍💻 Author
 
-**Krishna Prasad**  
-Senior Software Engineer  
+**Krishna Prasad**
+Senior Software Engineer
 AI Automation • Cloud • Backend Systems
 
 ---
@@ -188,3 +199,7 @@ AI Automation • Cloud • Backend Systems
 ## 📜 License
 
 MIT License
+
+```
+
+```
