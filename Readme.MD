@@ -122,69 +122,53 @@ pip install -r requirements.txt
 gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
 ```
 
-# ==============================
+## DEPLOYMENT ON RENDER
 
-# DEPLOYMENT ON RENDER
-
-# ==============================
-
-# Build Docker image
+### Build Docker image
 
 docker build -t receipt2sheets .
 
-# Start application (Render start command)
+### Start application (Render start command)
 
 gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
 
-# ==============================
+## TELEGRAM WEBHOOK SETUP
 
-# TELEGRAM WEBHOOK SETUP
-
-# ==============================
-
-# Set Telegram webhook
+### Set Telegram webhook
 
 curl -X POST \
 https://api.telegram.org/bot<BOT_TOKEN>/setWebhook \
 -d "url=https://your-render-app.onrender.com/telegram"
 
-# Verify webhook
+### Verify webhook
 
 curl https://api.telegram.org/bot<BOT_TOKEN>/getWebhookInfo
 
 ---
 
-# ==============================
+## RELIABILITY & SAFETY
 
-# RELIABILITY & SAFETY
+- Prevents duplicate Telegram update_id processing
 
-# ==============================
+- Acknowledges Telegram requests quickly to avoid retries
 
-# - Prevents duplicate Telegram update_id processing
+- Isolates OCR, AI, and Google Sheets logic into services
 
-# - Acknowledges Telegram requests quickly to avoid retries
-
-# - Isolates OCR, AI, and Google Sheets logic into services
-
-# - Timing and performance logging built-in
+- Timing and performance logging built-in
 
 ---
 
-# ==============================
+## FUTURE IMPROVEMENTS
 
-# FUTURE IMPROVEMENTS
+- Monthly expense summaries
 
-# ==============================
+- Charts & dashboards
 
-# - Monthly expense summaries
+- Multi-currency support
 
-# - Charts & dashboards
+- PDF receipt support
 
-# - Multi-currency support
-
-# - PDF receipt support
-
-# - Google Drive receipt archiving
+- Google Drive receipt archiving
 
 ---
 
@@ -199,7 +183,3 @@ AI Automation • Cloud • Backend Systems
 ## 📜 License
 
 MIT License
-
-```
-
-```
