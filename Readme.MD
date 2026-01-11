@@ -92,6 +92,7 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_REFRESH_TOKEN=your_google_refresh_token
 ⚠️ Do NOT commit secrets to GitHub.
 All secrets should live in Render Environment Variables.
+```
 
 ---
 
@@ -185,4 +186,7 @@ AI Automation • Cloud • Backend Systems
 
 📜 License
 MIT License
+
+```
+
 ```
