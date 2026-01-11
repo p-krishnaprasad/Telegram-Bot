@@ -177,16 +177,14 @@ Google Drive receipt archiving
 
 ---
 
-🧑‍💻 Author
-Krishna Prasad
-Senior Software Engineer
+## 🧑‍💻 Author
+
+**Krishna Prasad**  
+Senior Software Engineer  
 AI Automation • Cloud • Backend Systems
 
 ---
 
-📜 License
+## 📜 License
+
 MIT License
-
-```
-
-```
