@@ -5,6 +5,7 @@ from app.services.ai_parser import ai_ocr_parser
 from app.services.text_parser import parse_text_expense
 from app.services.sheets_manager import append_expenses
 from app.utils import time_it
+from config import ENABLE_LOGS
 
 PROCESSED_UPDATES = set()
 
@@ -58,8 +59,13 @@ def process_update(data):
             if not ocr_text:
                 send_reply(chat_id, "❌ No text detected in image.")
                 return
+            if ENABLE_LOGS == "true":
+                print(f"OCR Extracted Text: {ocr_text}")
 
             parsed_result = ai_ocr_parser(ocr_text)
+
+            if ENABLE_LOGS == "true":
+                print(f"AI Parsed Result: {parsed_result}")
             cleaned_result = json.loads(
                 parsed_result.strip()
                 .replace("```json", "")
