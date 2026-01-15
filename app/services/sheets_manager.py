@@ -5,11 +5,11 @@ from app.services.google_auth import (
     get_drive_service
 )
 from app.services.drive_service import (
-    find_spreadsheet
+    find_spreadsheet,
+    find_worksheet_by_title
 )
 from app.utils import time_it
 from config import GOOGLE_DRIVE_FOLDER_ID
-import time
 
 gc = get_gspread_client()
 drive_service = get_drive_service()
@@ -73,37 +73,41 @@ def format_header(worksheet, headers):
     # Freeze + filter (2 writes, unavoidable)
     worksheet.freeze(rows=1)
 
-def create_yearly_expense_sheet(sheet_name, parent_folder_id):
+def create_worksheet_with_headers(spreadsheet, title):
+    ws = spreadsheet.add_worksheet(
+        title=title,
+        rows=1000,
+        cols=len(HEADERS)
+    )
+    if not ws.row_values(1): #to reserve the spot for headers and avoid overwriting headers with data
+        format_header(ws, HEADERS)
+
+    return spreadsheet.id
+
+def create_sheet(sheet_name, title, parent_folder_id):
     spreadsheet = gc.create(sheet_name, folder_id=parent_folder_id)
 
-    # Rename default sheet to Jan
-    spreadsheet.sheet1.update_title(MONTH_SHEETS[0])
-
-    # Add remaining months
-    for month in MONTH_SHEETS[1:]:
-        spreadsheet.add_worksheet(
-            title=month,
-            rows=1000,
-            cols=len(HEADERS)
-        )
-
-    # Headers & formatting
-    for month in MONTH_SHEETS:
-        ws = spreadsheet.worksheet(month)
-        if not ws.row_values(1): #to reserver the spot for headers and avoid overwriting headers with data
-            format_header(ws, HEADERS)
+    create_worksheet_with_headers(spreadsheet, title)
+    
+    # Delete default Sheet1
+    spreadsheet.del_worksheet(spreadsheet.sheet1)
 
     return spreadsheet.id
 
 
-def get_or_create_yearly_sheet(year: int):
+def get_or_create_yearly_sheet(year: int, title: str):
     file_name = f"{YEARLY_FILE_PREFIX}{year}"
     existing_sheet = find_spreadsheet(drive_service, file_name)
     if existing_sheet:
-        return gc.open_by_key(existing_sheet["id"])
-
-    # new_file_id = create_yearly_expense_sheet(file_name, parent_folder_id)
-    new_file = create_yearly_expense_sheet(file_name, GOOGLE_DRIVE_FOLDER_ID)
+        spreadsheet = gc.open_by_key(existing_sheet)  # Preload to avoid multiple opens
+        if find_worksheet_by_title(spreadsheet,
+            title
+        ) == None:
+            create_worksheet_with_headers(spreadsheet, title)
+            
+        return spreadsheet
+    # Create new yearly sheet
+    new_file = create_sheet(file_name, title, GOOGLE_DRIVE_FOLDER_ID)
 
     return gc.open_by_key(new_file)
 
@@ -117,7 +121,7 @@ def append_expenses(data: dict):
         data["purchaseDate"]
     )
 
-    spreadsheet = get_or_create_yearly_sheet(year)
+    spreadsheet = get_or_create_yearly_sheet(year, month_sheet)
     try:
         worksheet = spreadsheet.worksheet(month_sheet)
     except gspread.WorksheetNotFound:
