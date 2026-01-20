@@ -1,3 +1,4 @@
+from datetime import date
 import json
 from app.services.telegram_service import download_telegram_file, send_reply
 from app.services.ocr_processor import extract_text_from_image
@@ -61,6 +62,9 @@ def process_update(data):
                 return
             if ENABLE_LOGS == "true":
                 print(f"OCR Extracted Text: {ocr_text}")
+
+            # add system date to ocr_text to use incase of missing date
+            ocr_text += f"\n\nsystem_date: {date.today()}"
 
             parsed_result = ai_ocr_parser(ocr_text)
 
