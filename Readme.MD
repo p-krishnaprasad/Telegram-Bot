@@ -81,15 +81,18 @@ Steps:
 Set the following variables in **Render → Service → Environment**:
 
 ```env
-BOT_TOKEN=your_telegram_bot_token
 
+BOT_TOKEN=your_telegram_bot_token
 OPENROUTER_MODEL_NAME=openai/gpt-4o-mini
 OPENROUTER_API_KEY=your_openrouter_api_key
-
-GOOGLE_DRIVE_FOLDER_ID=your_drive_folder_id
+GOOGLE_DRIVE_SHEETS_FOLDER_ID=your_drive_sheets_folder_id
+GOOGLE_DRIVE_IMAGES_FOLDER_ID=your_drive_images_folder_id
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_REFRESH_TOKEN=your_google_refresh_token
+ENABLE_LOGS=false
+SAVE_RECEIPT=true
+
 ⚠️ Do NOT commit secrets to GitHub.
 All secrets should live in Render Environment Variables.
 ```

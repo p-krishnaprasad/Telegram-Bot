@@ -1,12 +1,13 @@
 from datetime import date
 import json
+from app.services.drive_service import upload_image_to_drive
 from app.services.telegram_service import download_telegram_file, send_reply
 from app.services.ocr_processor import extract_text_from_image
 from app.services.ai_parser import ai_ocr_parser
 from app.services.text_parser import parse_text_expense
 from app.services.sheets_manager import append_expenses
 from app.utils import time_it
-from config import ENABLE_LOGS
+from config import ENABLE_LOGS, SAVE_RECEIPT
 
 PROCESSED_UPDATES = set()
 
@@ -75,8 +76,17 @@ def process_update(data):
                 .replace("```json", "")
                 .replace("```", "")
             )
+            
+            #save receipt if enabled
+            if SAVE_RECEIPT == "true":
+                file_id, receipt_link = upload_image_to_drive(
+                    img_bytes,
+                    cleaned_result,
+                )
 
+            cleaned_result["receipt_link"] = receipt_link
             append_expenses(cleaned_result)
+
             send_reply(chat_id, cleaned_result)
             return
 

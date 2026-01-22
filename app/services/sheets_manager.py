@@ -1,18 +1,16 @@
 import gspread
 from dateutil import parser
 from app.services.google_auth import (
-    get_gspread_client,
-    get_drive_service
+    get_gspread_client
 )
 from app.services.drive_service import (
     find_spreadsheet,
     find_worksheet_by_title
 )
 from app.utils import time_it
-from config import GOOGLE_DRIVE_FOLDER_ID
+from config import GOOGLE_DRIVE_SHEETS_FOLDER_ID
 
 gc = get_gspread_client()
-drive_service = get_drive_service()
 
 YEARLY_FILE_PREFIX = "Expenses_"
 
@@ -28,7 +26,8 @@ HEADERS = [
     "currency",
     "category",
     "seller",
-    "seller address"
+    "seller address",
+    "receipt_link"
 ]
 
 # -----------------------------
@@ -97,7 +96,7 @@ def create_sheet(sheet_name, title, parent_folder_id):
 
 def get_or_create_yearly_sheet(year: int, title: str):
     file_name = f"{YEARLY_FILE_PREFIX}{year}"
-    existing_sheet = find_spreadsheet(drive_service, file_name)
+    existing_sheet = find_spreadsheet(file_name)
     if existing_sheet:
         spreadsheet = gc.open_by_key(existing_sheet)  # Preload to avoid multiple opens
         if find_worksheet_by_title(spreadsheet,
@@ -107,7 +106,7 @@ def get_or_create_yearly_sheet(year: int, title: str):
             
         return spreadsheet
     # Create new yearly sheet
-    new_file = create_sheet(file_name, title, GOOGLE_DRIVE_FOLDER_ID)
+    new_file = create_sheet(file_name, title, GOOGLE_DRIVE_SHEETS_FOLDER_ID)
 
     return gc.open_by_key(new_file)
 
@@ -138,7 +137,8 @@ def append_expenses(data: dict):
             data["currency"],
             item["category"],
             data["seller"]["name"],
-            data["seller"]["address"]
+            data["seller"]["address"],
+            data["receipt_link"]
         ]
         for item in data["items"]
     ]
