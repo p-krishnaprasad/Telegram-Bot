@@ -71,8 +71,9 @@ Steps:
 4. Generate:
    - Client ID
    - Client Secret
-   - Refresh Token
-5. Create a target folder in Google Drive and note its **Folder ID**
+   - Refresh Token (you can eiether use google playground or use the generate_refresh_token.py from the repository)
+5. Create a target folder for sheets in Google Drive and note its **Folder ID**
+6. Create a target folder for bills in Google Drive and note its **Folder ID**
 
 ---
 
@@ -83,6 +84,7 @@ Set the following variables in **Render → Service → Environment**:
 ```env
 
 BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_ALLOWED_USERS=*******,********
 OPENROUTER_MODEL_NAME=openai/gpt-4o-mini
 OPENROUTER_API_KEY=your_openrouter_api_key
 GOOGLE_DRIVE_SHEETS_FOLDER_ID=your_drive_sheets_folder_id
