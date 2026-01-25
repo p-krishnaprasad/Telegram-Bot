@@ -28,6 +28,7 @@ def parse_text_expense(message_text):
             "name": seller,
             "address": seller_address
         },
+        "receipt_link": None,
         "purchaseDate": date,
         "currency": currency,
         "items": [
