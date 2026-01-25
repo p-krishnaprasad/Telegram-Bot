@@ -40,34 +40,37 @@ def download_telegram_file(file_id: str) -> bytes:
         return None
 
 @time_it
-def send_reply(chat_id: int, parsed_result: dict):
+def send_reply(chat_id: int, parsed_result: dict = {}, message: str = None):
     """
     Sends a text message back to the Telegram user.
     """
-    purchase_date = parsed_result.get("purchaseDate", "2025-12-31")
-    dt = parser.parse(purchase_date)
-    year = dt.year
-    month_sheet = MONTH_SHEETS[dt.month - 1]
-    file_name = f"Expenses_{year}"
-    sheet_name = month_sheet
-    items = parsed_result.get("items", [])
-    item_count = len(items)
-
-    if items:
-        # Building a fancy multiline message
-        response_msg = (
-            f"✅ *Processing Complete*\n\n"
-            f"📊 **Items Added:** `{item_count}`\n"
-            f"📄 **Source File:** `{file_name}`\n"
-            f"📒 **Google Sheet:** `{sheet_name}`\n\n"
-            f"✨ _Data has been synced successfully!_"
-      )
+    if message:
+        response_msg = message
     else:
-        response_msg = (
-            "⚠️ *OCR Finished*\n"
-            "I processed the image, but I couldn't find any line items to add. "
-            "Please make sure the receipt is clear and well-lit."
+        purchase_date = parsed_result.get("purchaseDate", "2025-12-31")
+        dt = parser.parse(purchase_date)
+        year = dt.year
+        month_sheet = MONTH_SHEETS[dt.month - 1]
+        file_name = f"Expenses_{year}"
+        sheet_name = month_sheet
+        items = parsed_result.get("items", [])
+        item_count = len(items)
+
+        if items:
+            # Building a fancy multiline message
+            response_msg = (
+                f"✅ *Processing Complete*\n\n"
+                f"📊 **Items Added:** `{item_count}`\n"
+                f"📄 **Source File:** `{file_name}`\n"
+                f"📒 **Google Sheet:** `{sheet_name}`\n\n"
+                f"✨ _Data has been synced successfully!_"
         )
+        else:
+            response_msg = (
+                "⚠️ *OCR Finished*\n"
+                "I processed the image, but I couldn't find any line items to add. "
+                "Please make sure the receipt is clear and well-lit."
+            )
     try:
         payload = {
             "chat_id": chat_id,

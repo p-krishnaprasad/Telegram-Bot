@@ -7,7 +7,8 @@ from app.services.ai_parser import ai_ocr_parser
 from app.services.text_parser import parse_text_expense
 from app.services.sheets_manager import append_expenses
 from app.utils import time_it
-from config import ENABLE_LOGS, SAVE_RECEIPT
+from config import ENABLE_LOGS, SAVE_RECEIPT, TELEGRAM_ALLOWED_USERS
+from app.services.telegram_messages import TelegramMessages as TM
 
 PROCESSED_UPDATES = set()
 
@@ -18,6 +19,15 @@ def process_update(data):
     - Photo → OCR → AI → Sheets
     - Text  → Direct Parse → Sheets
     """
+    user_id = data.get("message", {}).get("from", {}).get("id")
+    chat_id = data.get("message", {}).get("chat", {}).get("id")
+    if user_id not in TELEGRAM_ALLOWED_USERS:
+        send_reply(
+                    chat_id,
+                    message=TM.UNAUTHORIZED_USER
+                )
+        return
+
     try:
         update_id = data.get("update_id")
         if not update_id or update_id in PROCESSED_UPDATES:
@@ -27,8 +37,6 @@ def process_update(data):
         message = data.get("message")
         if not message:
             return
-
-        chat_id = message["chat"]["id"]
 
         # ---------------------------------
         # 📝 TEXT MESSAGE FLOW
@@ -41,8 +49,7 @@ def process_update(data):
             except Exception as e:
                 send_reply(
                     chat_id,
-                    "❌ Invalid format.\n"
-                    'Expected:\n"date","item","price","AUD","Category","Seller","Seller Address"'
+                    message=TM.TEXT_FORMAT_ERROR
                 )
             return
 
@@ -54,12 +61,12 @@ def process_update(data):
 
             img_bytes = download_telegram_file(file_id)
             if not img_bytes:
-                send_reply(chat_id, "❌ Failed to download image.")
+                send_reply(chat_id, message=TM.IMAGE_DOWNLOAD_ERROR)
                 return
 
             ocr_text = extract_text_from_image(img_bytes)
             if not ocr_text:
-                send_reply(chat_id, "❌ No text detected in image.")
+                send_reply(chat_id, message=TM.NO_TEXT_IN_IMG)
                 return
             if ENABLE_LOGS == "true":
                 print(f"OCR Extracted Text: {ocr_text}")
@@ -93,7 +100,7 @@ def process_update(data):
         # ---------------------------------
         # Unsupported message
         # ---------------------------------
-        send_reply(chat_id, "⚠️ Please send a photo or formatted text.")
+        send_reply(chat_id, message=TM.UNSUPPORTED_MESSAGE)
 
     except Exception as e:
         print(f"Orchestration Error: {e}")

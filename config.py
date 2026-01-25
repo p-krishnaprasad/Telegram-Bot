@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 load_dotenv()
 # Telegram
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
+TELEGRAM_ALLOWED_USERS = {
+    int(uid.strip())
+    for uid in os.getenv("TELEGRAM_ALLOWED_USERS", "").split(",")
+    if uid.strip().isdigit()
+}
 
 # OCR.Space
 OCR_SPACE_API_KEY = os.getenv("OCR_SPACE_API_KEY", "helloworld")
