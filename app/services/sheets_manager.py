@@ -48,7 +48,7 @@ def format_header(worksheet, headers):
     # Batch all formatting into ONE request
     worksheet.batch_format([
         {
-            "range": "A1:G1",
+            "range": "A1:H1",
             "format": {
                 "backgroundColor": {
                     "red": 0,
@@ -136,11 +136,11 @@ def append_expenses(data: dict):
             item["price"],
             data["currency"],
             item["category"],
-            data["seller"]["name"],
-            data["seller"]["address"],
-            data["receipt_link"]
+            data["seller"]["name"] if idx == 0 else "",  # Only include seller name for the first item
+            data["seller"]["address"] if idx == 0 else "",  # Only include seller address for the first item
+            data["receipt_link"] if idx == 0 else ""  # Only include receipt link for the first item
         ]
-        for item in data["items"]
+        for idx, item in enumerate(data["items"])
     ]
 
     worksheet.append_rows(rows, value_input_option="USER_ENTERED")
