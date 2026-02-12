@@ -88,8 +88,9 @@ def create_sheet(sheet_name, title, parent_folder_id):
 
     create_worksheet_with_headers(spreadsheet, title)
     
-    # Delete default Sheet1
-    spreadsheet.del_worksheet(spreadsheet.sheet1)
+   # Rename default Sheet1 to Summary
+    default_sheet = spreadsheet.sheet1
+    default_sheet.update_title("Summary")
 
     return spreadsheet.id
 
