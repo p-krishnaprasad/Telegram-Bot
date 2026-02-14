@@ -1,14 +1,14 @@
 from datetime import date
 import json
-from app.services.drive_service import upload_image_to_drive
-from app.services.telegram_service import download_telegram_file, send_reply
-from app.services.ocr_processor import extract_text_from_image
-from app.services.ai_parser import ai_ocr_parser
-from app.services.text_parser import parse_text_expense
-from app.services.sheets_manager import append_expenses
-from app.utils import time_it
+from app.integrations.google.drive import upload_image_to_drive
+from app.integrations.telegram.webhook import download_telegram_file, send_reply
+from app.integrations.ocr_processor import extract_text_from_image
+from app.integrations.ai_parser import ai_ocr_parser
+from app.components.text_parser import parse_text_expense
+from app.integrations.google.sheets import append_expenses
+from app.components.utils import time_it
 from config import ENABLE_LOGS, SAVE_RECEIPT, TELEGRAM_ALLOWED_USERS
-from app.services.telegram_messages import TelegramMessages as TM
+from app.integrations.telegram.message_templates import TelegramMessages as TM
 
 PROCESSED_UPDATES = set()
 

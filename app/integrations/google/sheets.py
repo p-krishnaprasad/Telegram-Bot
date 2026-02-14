@@ -1,13 +1,14 @@
 import gspread
 from dateutil import parser
-from app.services.google_auth import (
-    get_gspread_client
+from app.integrations.google.auth import (
+    get_gspread_client,
+    get_sheets_service
 )
-from app.services.drive_service import (
+from app.integrations.google.drive import (
     find_spreadsheet,
     find_worksheet_by_title
 )
-from app.utils import time_it
+from app.components.utils import time_it
 from config import GOOGLE_DRIVE_SHEETS_FOLDER_ID
 
 gc = get_gspread_client()
@@ -72,6 +73,7 @@ def format_header(worksheet, headers):
     # Freeze + filter (2 writes, unavoidable)
     worksheet.freeze(rows=1)
 
+@time_it
 def create_worksheet_with_headers(spreadsheet, title):
     ws = spreadsheet.add_worksheet(
         title=title,
@@ -83,6 +85,7 @@ def create_worksheet_with_headers(spreadsheet, title):
 
     return spreadsheet.id
 
+@time_it
 def create_sheet(sheet_name, title, parent_folder_id):
     spreadsheet = gc.create(sheet_name, folder_id=parent_folder_id)
 
@@ -94,7 +97,7 @@ def create_sheet(sheet_name, title, parent_folder_id):
 
     return spreadsheet.id
 
-
+@time_it
 def get_or_create_yearly_sheet(year: int, title: str):
     file_name = f"{YEARLY_FILE_PREFIX}{year}"
     existing_sheet = find_spreadsheet(file_name)
@@ -145,3 +148,14 @@ def append_expenses(data: dict):
     ]
 
     worksheet.append_rows(rows, value_input_option="USER_ENTERED")
+
+def get_last_row(spreadsheet_id, sheet_name):
+    service = get_sheets_service()
+
+    result = service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id,
+        range=f"{sheet_name}!A:A"
+    ).execute()
+
+    values = result.get("values", [])
+    return len(values)

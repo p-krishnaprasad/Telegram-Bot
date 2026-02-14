@@ -1,7 +1,7 @@
 import io
 from PIL import Image
 import pytesseract
-from app.utils import time_it
+from app.components.utils import time_it
 
 # Optional: for multi-language OCR, ensure Tesseract languages are installed
 LANGUAGES = "eng"  # add more as needed

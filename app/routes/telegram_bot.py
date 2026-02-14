@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import threading
-from app.services.bot_manager import process_update
+from app.components.utils import print_process_flow_message
+from app.flows.bot_manager import process_update
 
 telegram_bp = Blueprint("telegram", __name__)
 
@@ -8,7 +9,7 @@ telegram_bp = Blueprint("telegram", __name__)
 def telegram_webhook():
     data = request.get_json()
     
-    print(f"Received update")
+    print_process_flow_message("🚀 Received Telegram Update")
 
     # Delegate the work to the service layer in a background thread
     threading.Thread(target=process_update, args=(data,)).start()

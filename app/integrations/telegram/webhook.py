@@ -1,6 +1,6 @@
 import requests
-from app.services.sheets_manager import MONTH_SHEETS
-from app.utils import time_it
+from app.integrations.google.sheets import MONTH_SHEETS
+from app.components.utils import time_it
 from config import BOT_TOKEN
 from dateutil import parser
 

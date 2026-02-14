@@ -10,4 +10,7 @@ def create_app():
     from app.routes.telegram_bot import telegram_bp
     app.register_blueprint(telegram_bp)
 
+    from app.routes.summary import summary_bp
+    app.register_blueprint(summary_bp)
+
     return app

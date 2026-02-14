@@ -1,4 +1,4 @@
-from app.utils import time_it
+from app.components.utils import time_it
 from config import OPENROUTER_API_KEY, OPENROUTER_MODEL_NAME
 from openai import OpenAI
 
@@ -58,6 +58,10 @@ Output format (JSON):
         "Electronics",
         "Clothing",
         "Household",
+        "Personal",
+        "Transport",
+        "Tools",
+        "Entertainment",
         "Other"
       ]
     }

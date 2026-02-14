@@ -2,8 +2,9 @@ import random
 import gspread
 import io
 from googleapiclient.http import MediaIoBaseUpload
-from app.services.google_auth import get_drive_service
-from app.utils import time_it
+from app.integrations.google.auth import get_drive_service
+from app.components.utils import time_it
+from datetime import datetime, timezone
 from config import GOOGLE_DRIVE_IMAGES_FOLDER_ID
 
 SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
@@ -56,3 +57,38 @@ def upload_image_to_drive(
 
 
     return file["id"], file["webViewLink"]
+
+@time_it
+def get_expense_files(folder_id):
+    drive = get_drive_service()
+
+    query = (
+        f"'{folder_id}' in parents "
+        f"and name contains 'Expenses_' "
+        f"and mimeType='application/vnd.google-apps.spreadsheet'"
+    )
+
+    results = drive.files().list(
+        q=query,
+        fields="files(id, name)"
+    ).execute()
+
+    return results.get("files", [])
+
+@time_it
+def was_modified_today(spreadsheet_id):
+    drive = get_drive_service()
+
+    file = drive.files().get(
+        fileId=spreadsheet_id,
+        fields="modifiedTime"
+    ).execute()
+
+    modified_time = file["modifiedTime"]
+    modified_dt = datetime.fromisoformat(
+        modified_time.replace("Z", "+00:00")
+    )
+
+    today = datetime.now(timezone.utc).date()
+
+    return modified_dt.date() == today

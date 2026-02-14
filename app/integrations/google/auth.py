@@ -28,6 +28,8 @@ def get_gspread_client():
     creds = get_credentials()
     return gspread.authorize(creds)
 
+def get_sheets_service():
+    return build("sheets", "v4", credentials=get_credentials())
 
 def get_drive_service():
     creds = get_credentials()
