@@ -1,7 +1,5 @@
 import time
 import functools
-from tkinter.font import BOLD
-
 
 # ANSI Colors
 CYAN = "\033[96m"
