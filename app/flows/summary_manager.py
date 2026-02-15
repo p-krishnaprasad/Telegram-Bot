@@ -1,7 +1,7 @@
 import requests
 from app.components.utils import print_summary_result, time_it
 from app.integrations.google.auth import get_sheets_service
-from app.integrations.google.sheets import get_last_row
+from app.integrations.google.sheets import analyze_sheet
 from app.integrations.google.drive import get_expense_files, was_modified_today
 from config import GOOGLE_DRIVE_SHEETS_FOLDER_ID
 
@@ -65,8 +65,9 @@ def rebuild_summary(spreadsheet_id):
         source_sheet_id = sheet["sheetId"]
 
         pivot_start_row = chart_row_position
-        pivot_end_row = pivot_start_row + 20
-        last_row = get_last_row(spreadsheet_id, sheet["title"])
+        total_price, category_count, last_row = analyze_sheet(spreadsheet_id, sheet["title"])
+
+        pivot_end_row = pivot_start_row + category_count
         # Create Pivot
         requests.append({
             "updateCells": {
@@ -82,8 +83,8 @@ def rebuild_summary(spreadsheet_id):
                             },
                             "rows": [{
                                 "sourceColumnOffset": 4,
-                                "showTotals": False,
-                                "sortOrder": "DESCENDING"
+                                "showTotals": True,
+                                "sortOrder": "ASCENDING"
                             }],
                             "values": [{
                                 "summarizeFunction": "SUM",
@@ -107,7 +108,7 @@ def rebuild_summary(spreadsheet_id):
                 "addChart": {
                     "chart": {
                         "spec": {
-                            "title": f"{sheet['title']} Expenditure",
+                            "title": f"{sheet['title']} - ${total_price}",
                             "pieChart": {
                                 "legendPosition": "RIGHT_LEGEND",
                                 "pieHole": 0.4,

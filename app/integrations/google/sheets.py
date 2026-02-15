@@ -1,3 +1,4 @@
+import math
 import gspread
 from dateutil import parser
 from app.integrations.google.auth import (
@@ -149,13 +150,28 @@ def append_expenses(data: dict):
 
     worksheet.append_rows(rows, value_input_option="USER_ENTERED")
 
-def get_last_row(spreadsheet_id, sheet_name):
+def analyze_sheet(spreadsheet_id, sheet_name):
     service = get_sheets_service()
 
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range=f"{sheet_name}!A:A"
+        range=f"{sheet_name}!C:E"
     ).execute()
 
-    values = result.get("values", [])
-    return len(values)
+    rows = result.get("values", [])
+
+    total = 0
+    categories = set()
+
+    for row in rows[1:]:  # Skip header row
+        if not row:
+            continue
+
+        if len(row) > 0 and row[0]:
+            total += float(row[0])
+
+        if len(row) > 2 and row[2]:
+            categories.add(row[2])
+
+    return round(total, 2), len(categories) + 1, len(rows)  # +1 to account for header row
+    
