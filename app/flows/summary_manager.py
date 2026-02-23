@@ -2,7 +2,7 @@ import requests
 from app.components.utils import print_summary_result, time_it
 from app.integrations.google.auth import get_sheets_service
 from app.integrations.google.sheets import analyze_sheet
-from app.integrations.google.drive import get_expense_files, was_modified_today
+from app.integrations.google.drive import get_expense_files, was_modified_recently
 from config import GOOGLE_DRIVE_SHEETS_FOLDER_ID
 
 @time_it
@@ -168,7 +168,7 @@ def summarise_expense_sheets():
         spreadsheet_id = file["id"]
         name = file["name"]
 
-        if was_modified_today(spreadsheet_id):
+        if was_modified_recently(spreadsheet_id):
             # print(f"{name} modified today. Rebuilding summary.")
             rebuild_summary(spreadsheet_id)
             # print(f"Summary rebuilt for {name}")

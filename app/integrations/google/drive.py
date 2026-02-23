@@ -4,7 +4,7 @@ import io
 from googleapiclient.http import MediaIoBaseUpload
 from app.integrations.google.auth import get_drive_service
 from app.components.utils import time_it
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from config import GOOGLE_DRIVE_IMAGES_FOLDER_ID
 
 SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
@@ -76,7 +76,7 @@ def get_expense_files(folder_id):
     return results.get("files", [])
 
 @time_it
-def was_modified_today(spreadsheet_id):
+def was_modified_recently(spreadsheet_id):
     drive = get_drive_service()
 
     file = drive.files().get(
@@ -85,10 +85,13 @@ def was_modified_today(spreadsheet_id):
     ).execute()
 
     modified_time = file["modifiedTime"]
+
+    # Convert ISO string to datetime (UTC aware)
     modified_dt = datetime.fromisoformat(
         modified_time.replace("Z", "+00:00")
     )
 
     today = datetime.now(timezone.utc).date()
+    yesterday = today - timedelta(days=1)
 
-    return modified_dt.date() == today
+    return modified_dt.date() in (today, yesterday)
