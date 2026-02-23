@@ -37,29 +37,16 @@ def process_update(data):
         message = data.get("message")
         if not message:
             return
-
+        
         # ---------------------------------
         # 📝 TEXT MESSAGE FLOW
         # ---------------------------------
         if "text" in message:
-            try:
-                parsed_result = ai_ocr_parser(message["text"])
-                # parsed_result = parse_text_expense()
-                if ENABLE_LOGS == "true":
-                    print(f"AI Parsed Result: {parsed_result}")
-                cleaned_result = json.loads(
-                    parsed_result.strip()
-                    .replace("```json", "")
-                    .replace("```", "")
-                )
-                cleaned_result["receipt_link"] = message["text"]
-                append_expenses(cleaned_result)
-                send_reply(chat_id, cleaned_result)
-            except Exception as e:
-                send_reply(
-                    chat_id,
-                    message=TM.TEXT_FORMAT_ERROR
-                )
+            process_expense(
+                chat_id=chat_id,
+                raw_text=message["text"],
+                receipt_link=message["text"],  # store original text
+            )
             return
 
         # ---------------------------------
@@ -77,33 +64,15 @@ def process_update(data):
             if not ocr_text:
                 send_reply(chat_id, message=TM.NO_TEXT_IN_IMG)
                 return
+
             if ENABLE_LOGS == "true":
                 print(f"OCR Extracted Text: {ocr_text}")
 
-            # add system date to ocr_text to use incase of missing date
-            ocr_text += f"\n\nsystem_date: {date.today()}"
-
-            parsed_result = ai_ocr_parser(ocr_text)
-
-            if ENABLE_LOGS == "true":
-                print(f"AI Parsed Result: {parsed_result}")
-            cleaned_result = json.loads(
-                parsed_result.strip()
-                .replace("```json", "")
-                .replace("```", "")
+            process_expense(
+                chat_id=chat_id,
+                raw_text=ocr_text,
+                img_bytes=img_bytes
             )
-            
-            #save receipt if enabled
-            if SAVE_RECEIPT == "true":
-                file_id, receipt_link = upload_image_to_drive(
-                    img_bytes,
-                    cleaned_result,
-                )
-
-            cleaned_result["receipt_link"] = receipt_link
-            append_expenses(cleaned_result)
-
-            send_reply(chat_id, cleaned_result)
             return
 
         # ---------------------------------
@@ -113,3 +82,36 @@ def process_update(data):
 
     except Exception as e:
         print(f"Orchestration Error: {e}")
+
+
+def process_expense(chat_id, raw_text, receipt_link=None, img_bytes=None):
+    try:
+        # Add system date
+        raw_text += f"\n\nsystem_date: {date.today()}"
+
+        parsed_result = ai_ocr_parser(raw_text)
+
+        if ENABLE_LOGS == "true":
+            print(f"AI Parsed Result: {parsed_result}")
+
+        cleaned_result = json.loads(
+            parsed_result.strip()
+            .replace("```json", "")
+            .replace("```", "")
+        )
+
+        # Upload image if required
+        if img_bytes and SAVE_RECEIPT == "true":
+            _, receipt_link = upload_image_to_drive(
+                img_bytes,
+                cleaned_result,
+            )
+
+        cleaned_result["receipt_link"] = receipt_link
+
+        append_expenses(cleaned_result)
+
+        send_reply(chat_id, cleaned_result)
+
+    except Exception:
+        send_reply(chat_id, message=TM.TEXT_FORMAT_ERROR)
