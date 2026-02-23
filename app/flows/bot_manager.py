@@ -43,9 +43,17 @@ def process_update(data):
         # ---------------------------------
         if "text" in message:
             try:
-                parsed_result = parse_text_expense(message["text"])
-                append_expenses(parsed_result)
-                send_reply(chat_id, parsed_result)
+                parsed_result = ai_ocr_parser(message["text"])
+                # parsed_result = parse_text_expense()
+                if ENABLE_LOGS == "true":
+                    print(f"AI Parsed Result: {parsed_result}")
+                cleaned_result = json.loads(
+                    parsed_result.strip()
+                    .replace("```json", "")
+                    .replace("```", "")
+                )
+                append_expenses(cleaned_result)
+                send_reply(chat_id, cleaned_result)
             except Exception as e:
                 send_reply(
                     chat_id,
