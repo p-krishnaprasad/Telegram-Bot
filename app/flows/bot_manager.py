@@ -52,6 +52,7 @@ def process_update(data):
                     .replace("```json", "")
                     .replace("```", "")
                 )
+                cleaned_result["receipt_link"] = message["text"]
                 append_expenses(cleaned_result)
                 send_reply(chat_id, cleaned_result)
             except Exception as e:
